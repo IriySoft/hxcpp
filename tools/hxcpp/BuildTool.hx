@@ -304,8 +304,20 @@ class BuildTool
       }
 
       Profile.setEntry("build");
-      for(target in inTargets)
-         buildTarget(target,destination);
+      if (mDefines.exists("HXCPP_GENERATE_MSVC"))
+      {
+         // Calculate platform string
+         var platform = m64 ? "x64" : (arm64 ? "ARM64" : "Win32");
+
+         var gen = new GenMsvc(mDefines, mTargets, mCompiler, platform, defaultCxxStandard);
+         for(target in inTargets)
+            gen.generate(target);
+      }
+      else
+      {
+         for(target in inTargets)
+            buildTarget(target,destination);
+      }
 
       var linkOutputs = mDefines.get("HXCPP_LINK_OUTPUTS");
       if (linkOutputs!=null)
@@ -1888,7 +1900,6 @@ class BuildTool
          if (targets.length==0)
             targets.push("default");
 
-
          new BuildTool(makefile,defines,targets,include_path,dirtyList);
       }
    }
@@ -2264,10 +2275,32 @@ class BuildTool
                if (extract_version.match(file))
                {
                   var ver = extract_version.matched(1);
-                  var split_best = best.split(".");
                   var split_ver = ver.split(".");
-                  if (Std.parseFloat(split_ver[0]) > Std.parseFloat(split_best[0]) || Std.parseFloat(split_ver[1]) > Std.parseFloat(split_best[1]))
+                  var major_ver = Std.parseFloat(split_ver[0]);
+                  var minor_ver = Std.parseFloat(split_ver[1]);
+                  if (Math.isNaN(major_ver) || Math.isNaN(minor_ver))
+                  {
+                     // if version is the wrong format, skip it
+                     continue;
+                  }
+                  var split_best = best.split(".");
+                  var major_best = Std.parseFloat(split_best[0]);
+                  var minor_best = Std.parseFloat(split_best[1]);
+                  if (Math.isNaN(major_best) || Math.isNaN(minor_best))
+                  {
+                     // shouldn't happen, but just to be safe
                      best = ver;
+                  }
+                  else if (major_ver > major_best)
+                  {
+                     // prefer higher major version
+                     best = ver;
+                  }
+                  else if (major_ver == major_best && minor_ver > minor_best)
+                  {
+                     // if major versions are equal, prefer higher minor version
+                     best = ver;
+                  }
                }
             }
             if (best!="0.0")
@@ -2426,7 +2459,7 @@ class BuildTool
    public function checkToolVersion(inVersion:String)
    {
       var ver = Std.parseInt(inVersion);
-      if (ver>7)
+      if (ver>8)
          Log.error("Your version of hxcpp.n is out-of-date.  Please update by compiling 'haxe compile.hxml' in hxcpp/tools/hxcpp.");
    }
 

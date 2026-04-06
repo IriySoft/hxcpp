@@ -1,7 +1,7 @@
 <xml>
 
 <!-- make sure hxcpp.n is up to date -->
-<pleaseUpdateHxcppTool version="7" />
+<pleaseUpdateHxcppTool version="8" />
 
 <pragma once="true" />
 
@@ -166,8 +166,6 @@
   <depend name="${HXCPP}/src/hx/Hash.h"/>
   <depend name="${HXCPP}/src/hx/Unicase.h"/>
   <depend name="${HXCPP}/src/hx/gc/GcRegCapture.h"/>
-  <compilerflag value="-D_CRT_SECURE_NO_DEPRECATE"/>
-
   <compilerflag value="-DHX_UNDEFINE_H" />
 
   <precompiledheader name="hxcpp" dir="${HXCPP}/include" />
