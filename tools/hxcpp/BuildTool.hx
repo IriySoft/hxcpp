@@ -304,8 +304,20 @@ class BuildTool
       }
 
       Profile.setEntry("build");
-      for(target in inTargets)
-         buildTarget(target,destination);
+      if (mDefines.exists("HXCPP_GENERATE_MSVC"))
+      {
+         // Calculate platform string
+         var platform = m64 ? "x64" : (arm64 ? "ARM64" : "Win32");
+
+         var gen = new GenMsvc(mDefines, mTargets, mCompiler, platform, defaultCxxStandard);
+         for(target in inTargets)
+            gen.generate(target);
+      }
+      else
+      {
+         for(target in inTargets)
+            buildTarget(target,destination);
+      }
 
       var linkOutputs = mDefines.get("HXCPP_LINK_OUTPUTS");
       if (linkOutputs!=null)
@@ -1888,7 +1900,6 @@ class BuildTool
          if (targets.length==0)
             targets.push("default");
 
-
          new BuildTool(makefile,defines,targets,include_path,dirtyList);
       }
    }
@@ -2448,7 +2459,7 @@ class BuildTool
    public function checkToolVersion(inVersion:String)
    {
       var ver = Std.parseInt(inVersion);
-      if (ver>7)
+      if (ver>8)
          Log.error("Your version of hxcpp.n is out-of-date.  Please update by compiling 'haxe compile.hxml' in hxcpp/tools/hxcpp.");
    }
 
